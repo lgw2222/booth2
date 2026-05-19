@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vintage Booth">
+<meta name="theme-color" content="#a85570">
+<title>The Vintage Booth</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,600&family=Jost:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Jost',sans-serif;background:#fdf8f2;min-height:100vh;max-width:500px;margin:0 auto;color:#3a2d2a;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.page{display:none;}
+.page.active{display:block;min-height:100vh;}
+.lbl{font-size:10px;font-weight:700;color:#a85570;margin-top:12px;display:block;letter-spacing:1px;text-transform:uppercase;}
+.inp{border:1.5px solid #e8d8d0;border-radius:8px;padding:11px 13px;font-size:16px;background:white;outline:none;width:100%;font-family:'Jost',sans-serif;color:#3a2d2a;-webkit-appearance:none;}
+.inp:focus{border-color:#c9748a;}
+.pill-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px;}
+.pill{border:1.5px solid #e8d8d0;background:white;border-radius:20px;padding:7px 14px;font-size:12px;cursor:pointer;color:#3a2d2a;font-family:'Jost',sans-serif;}
+.pill.active{background:#c9748a;color:white;border-color:#c9748a;}
+.fb{border:1px solid #e8d8d0;background:white;border-radius:20px;padding:6px 13px;font-size:11px;cursor:pointer;color:#9e8e88;font-family:'Jost',sans-serif;margin-bottom:6px;}
+.fb.active{background:#c9748a;color:white;border-color:#c9748a;}
+.save-btn{background:linear-gradient(135deg,#a85570,#c9748a);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px;width:100%;font-family:'Jost',sans-serif;}
+.save-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.back-btn{background:none;border:none;color:#c9748a;font-size:14px;cursor:pointer;font-weight:700;font-family:'Jost',sans-serif;}
+.page-hdr{display:flex;align-items:center;gap:10px;padding:13px 16px;background:white;border-bottom:2px solid #f5dde4;position:sticky;top:0;z-index:40;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:19px;color:#a85570;}
+.form{padding:16px;display:flex;flex-direction:column;gap:4px;padding-bottom:60px;}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px 50px;}
+.item-card{background:white;border-radius:14px;overflow:hidden;border:1px solid #e8d8d0;cursor:pointer;position:relative;}
+.dr{display:flex;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #e8d8d0;align-items:flex-start;gap:8px;}
+.dr:last-child{border-bottom:none;}
+.dl{font-size:11px;color:#9e8e88;flex-shrink:0;}
+.dv{font-size:13px;font-weight:700;text-align:right;}
+.detail-card{background:white;border-radius:14px;overflow:hidden;margin-bottom:14px;border:1px solid #e8d8d0;}
+.detail-card-hdr{background:linear-gradient(135deg,#fdf0f3,#f7e8ec);padding:9px 14px;border-bottom:1px solid #f5dde4;font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:#a85570;}
+.spinner{width:30px;height:30px;border:3px solid #f5dde4;border-top-color:#c9748a;border-radius:50%;animation:spin 0.8s linear infinite;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(60,20,30,0.55);z-index:200;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:#fdf8f2;border-radius:22px 22px 0 0;padding:26px 20px 32px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#3a2d2a;color:white;padding:9px 18px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+table{border-collapse:collapse;width:100%;min-width:600px;background:white;font-size:12px;border-radius:12px;overflow:hidden;border:1px solid #e8d8d0;}
+thead tr{background:linear-gradient(135deg,#6b2d45,#a85570);}
+th{color:white;padding:10px 11px;text-align:left;font-size:11px;font-weight:700;white-space:nowrap;font-family:'Jost',sans-serif;}
+td{padding:10px 11px;color:#3a2d2a;border-bottom:1px solid #e8d8d0;white-space:nowrap;}
+tr:nth-child(even) td{background:#fdf0f3;}
+tfoot tr{background:#f5ece0;}
+tfoot td{font-weight:700;border-bottom:none;}
+</style>
+</head>
+<body>
+
+<!-- MAIN -->
+<div id="page-main" class="page active">
+<div style="background:linear-gradient(135deg,#6b2d45,#c9748a);color:white;padding:20px 18px 16px;position:sticky;top:0;z-index:50;">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+    <div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;">🌸 The <span style="font-style:italic;font-weight:400;">Vintage</span> Booth</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:3px;letter-spacing:1.5px;">✦ ANTIQUES & TREASURES ✦</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px;">
+      <button class="fb" style="background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.3);" onclick="showPage('expenses')">💸</button>
+      <button class="fb" style="background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.3);" onclick="showPage('sheet')">📊</button>
+      <button onclick="showPage('add')" style="background:#c9a96e;color:#3a2d2a;border:none;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">+ Add</button>
+    </div>
+  </div>
+  <div style="height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),#c9a96e,rgba(255,255,255,0.3),transparent);margin-top:12px;"></div>
+</div>
+<div style="background:rgba(168,85,112,0.1);padding:4px 14px;font-size:11px;color:#a85570;display:flex;align-items:center;gap:6px;">
+  <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#c9a96e;display:inline-block;"></span>
+  <span id="sync-msg">Connecting...</span>
+</div>
+<div style="display:flex;background:white;border-bottom:1px solid #e8d8d0;">
+  <div style="flex:1;padding:13px 4px;text-align:center;border-right:1px solid #e8d8d0;"><div id="s-total" style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:#c9a96e;">0</div><div style="font-size:9px;color:#9e8e88;letter-spacing:0.8px;">ITEMS</div></div>
+  <div style="flex:1;padding:13px 4px;text-align:center;border-right:1px solid #e8d8d0;"><div id="s-avail" style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:#c9748a;">0</div><div style="font-size:9px;color:#9e8e88;letter-spacing:0.8px;">FOR SALE</div></div>
+  <div style="flex:1;padding:13px 4px;text-align:center;border-right:1px solid #e8d8d0;"><div id="s-sold" style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:#7a9e8e;">0</div><div style="font-size:9px;color:#9e8e88;letter-spacing:0.8px;">SOLD</div></div>
+  <div style="flex:1;padding:13px 4px;text-align:center;"><div id="s-profit" style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:#7a9e8e;">$0</div><div style="font-size:9px;color:#9e8e88;letter-spacing:0.8px;">PROFIT</div></div>
+</div>
+<div style="display:flex;gap:6px;padding:11px 14px 0;flex-wrap:wrap;">
+  <button class="fb active" onclick="setFilter('all',this)">All</button>
+  <button class="fb" onclick="setFilter('available',this)">For Sale</button>
+  <button class="fb" onclick="setFilter('sold',this)">Sold</button>
+  <button class="fb" onclick="setFilter('loc:Booth',this)">📍 Booth</button>
+  <button class="fb" onclick="setFilter('loc:Shedd',this)">🏛 Shedd</button>
+  <button class="fb" onclick="setFilter('loc:Garage',this)">🏠 Garage</button>
+  <button class="fb" onclick="setFilter('loc:Attic',this)">🪜 Attic</button>
+  <button class="fb" onclick="setFilter('loc:Storage Unit',this)">📦 Storage</button>
+  <button class="fb" onclick="setFilter('loc:Sold Elsewhere',this)">🛒 Sold Elsewhere</button>
+</div>
+<div id="main-loading" style="display:flex;flex-direction:column;align-items:center;padding:50px;gap:12px;">
+  <div class="spinner"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;color:#9e8e88;">Loading your treasures...</div>
+</div>
+<div id="grid" class="card-grid" style="display:none;"></div>
+<div id="empty" style="display:none;flex-direction:column;align-items:center;padding:50px 24px;gap:12px;">
+  <div style="font-size:44px;">🌷</div>
+  <div id="empty-txt" style="font-family:'Cormorant Garamond',serif;font-style:italic;color:#9e8e88;font-size:17px;text-align:center;">No treasures yet!<br>Tap + Add to begin.</div>
+</div>
+</div>
+
+<!-- ADD -->
+<div id="page-add" class="page">
+<div class="page-hdr"><button class="back-btn" onclick="showPage('main')">← Back</button><span class="page-title">✦ Add a Treasure</span></div>
+<div class="form">
+  <label class="lbl">Item Photo</label>
+  <div id="img-area" onclick="document.getElementById('fi').click()" style="border:2px dashed #f5dde4;border-radius:12px;min-height:130px;display:flex;align-items:center;justify-content:center;background:#fdf0f3;cursor:pointer;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;color:#9e8e88;"><div style="font-size:32px;">🌸</div><div style="font-size:12px;">Tap to photograph your piece</div></div>
+  </div>
+  <input type="file" id="fi" accept="image/*" capture="environment" style="display:none" onchange="handleImg(this,'item')">
+  <label class="lbl">Receipt / Check Photo (optional)</label>
+  <div id="rcpt-area" onclick="document.getElementById('ri').click()" style="border:2px dashed #d4b87a;border-radius:12px;min-height:90px;display:flex;align-items:center;justify-content:center;background:#f5ecd8;cursor:pointer;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7a5c44;"><div style="font-size:26px;">🧾</div><div style="font-size:12px;">Tap to photograph receipt or check</div></div>
+  </div>
+  <input type="file" id="ri" accept="image/*" capture="environment" style="display:none" onchange="handleImg(this,'receipt')">
+  <label class="lbl">Item Name (optional)</label>
+  <input type="text" id="a-name" placeholder="e.g. Victorian oil painting" class="inp">
+  <label class="lbl">Bundle purchase?</label>
+  <div style="display:flex;gap:8px;margin-top:6px;">
+    <button id="b-no" class="pill active" onclick="setBundle(false)">No — single item</button>
+    <button id="b-yes" class="pill" onclick="setBundle(true)">Yes — bundle</button>
+  </div>
+  <div id="bundle-box" style="display:none;background:#f5ecd8;border:1px solid #d4b87a;border-radius:10px;padding:11px;margin-top:6px;font-size:12px;color:#7a5c44;font-style:italic;line-height:1.6;">
+    💡 Enter total paid for the lot. List each piece in Notes. Track profit as you sell each piece.
+    <input type="text" id="a-bundle" placeholder="Bundle description (optional)" class="inp" style="margin-top:8px;font-style:normal;">
+  </div>
+  <label class="lbl">What did you pay? *</label>
+  <input type="number" id="a-paid" placeholder="0.00" inputmode="decimal" class="inp">
+  <label class="lbl">How did you pay?</label>
+  <div class="pill-row" id="pay-pills"></div>
+  <label class="lbl">Location</label>
+  <div class="pill-row" id="loc-pills"></div>
+  <label class="lbl">Date Purchased</label>
+  <input type="date" id="a-date" class="inp">
+  <label class="lbl">Notes (optional)</label>
+  <textarea id="a-notes" placeholder="Condition, era, style, bundle pieces..." class="inp" style="min-height:64px;resize:vertical;"></textarea>
+  <button class="save-btn" id="save-btn" onclick="saveItem()">🌷 Save This Treasure</button>
+</div>
+</div>
+
+<!-- DETAIL -->
+<div id="page-detail" class="page">
+<div class="page-hdr"><button class="back-btn" onclick="showPage('main')">← Back</button><span class="page-title" id="d-title"></span></div>
+<div id="d-body" style="padding:16px 16px 60px;"></div>
+</div>
+
+<!-- SHEET -->
+<div id="page-sheet" class="page">
+<div class="page-hdr" style="justify-content:space-between;">
+  <div style="display:flex;align-items:center;gap:10px;"><button class="back-btn" onclick="showPage('main')">← Back</button><span class="page-title">📊 Spreadsheet</span></div>
+  <button onclick="dlExcel()" style="background:#2d7a5a;color:white;border:none;border-radius:20px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;">⬇ Excel</button>
+</div>
+<div style="overflow-x:auto;padding:14px;">
+  <table>
+    <thead><tr><th>Item</th><th>Location</th><th>Paid</th><th>How Paid</th><th>Date Bought</th><th>Sold For</th><th>Buyer Paid</th><th>Date Sold</th><th>Profit</th><th>Status</th></tr></thead>
+    <tbody id="sheet-body"></tbody>
+    <tfoot><tr id="sheet-foot"></tr></tfoot>
+  </table>
+</div>
+</div>
+
+<!-- EXPENSES -->
+<div id="page-expenses" class="page">
+<div class="page-hdr" style="justify-content:space-between;">
+  <div style="display:flex;align-items:center;gap:10px;"><button class="back-btn" onclick="showPage('main')">← Back</button><span class="page-title">💸 Expenses</span></div>
+  <button onclick="showPage('add-expense')" style="background:#c9a96e;color:#3a2d2a;border:none;border-radius:20px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;">+ Add</button>
+</div>
+<div style="display:flex;background:white;border-bottom:1px solid #e8d8d0;">
+  <div style="flex:1;padding:12px 4px;text-align:center;border-right:1px solid #e8d8d0;"><div id="e-total" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:#c9748a;">$0</div><div style="font-size:9px;color:#9e8e88;">TOTAL</div></div>
+  <div style="flex:1;padding:12px 4px;text-align:center;border-right:1px solid #e8d8d0;"><div id="e-month" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:#7a5c44;">$0</div><div style="font-size:9px;color:#9e8e88;">THIS MONTH</div></div>
+  <div style="flex:1;padding:12px 4px;text-align:center;"><div id="e-count" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:#9e8e88;">0</div><div style="font-size:9px;color:#9e8e88;">ENTRIES</div></div>
+</div>
+<div id="exp-list" style="padding:12px 14px 50px;display:flex;flex-direction:column;gap:10px;"></div>
+<div id="exp-empty" style="display:none;flex-direction:column;align-items:center;padding:50px 24px;gap:12px;">
+  <div style="font-size:40px;">💰</div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;color:#9e8e88;font-size:17px;text-align:center;">No expenses yet.<br>Tap + Add to record one.</div>
+</div>
+</div>
+
+<!-- ADD EXPENSE -->
+<div id="page-add-expense" class="page">
+<div class="page-hdr"><button class="back-btn" onclick="showPage('expenses')">← Back</button><span class="page-title">+ Add Expense</span></div>
+<div class="form">
+  <label class="lbl" style="color:#7a5c44;">Receipt / Proof Photo (optional)</label>
+  <div id="exp-rcpt-area" onclick="document.getElementById('eri').click()" style="border:2px dashed #d4b87a;border-radius:12px;min-height:90px;display:flex;align-items:center;justify-content:center;background:#f5ecd8;cursor:pointer;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7a5c44;"><div style="font-size:26px;">🧾</div><div style="font-size:12px;">Receipt, check, or card statement</div></div>
+  </div>
+  <input type="file" id="eri" accept="image/*" capture="environment" style="display:none" onchange="handleExpImg(this)">
+  <label class="lbl">Category</label>
+  <div class="pill-row" id="exp-cat-pills"></div>
+  <label class="lbl">Amount *</label>
+  <input type="number" id="e-amount" placeholder="0.00" inputmode="decimal" class="inp">
+  <label class="lbl">Description (optional)</label>
+  <input type="text" id="e-desc" placeholder="e.g. Gas to estate sale" class="inp">
+  <label class="lbl">How Paid</label>
+  <div class="pill-row" id="exp-pay-pills"></div>
+  <label class="lbl">Last 4 digits of card (optional)</label>
+  <input type="text" id="e-card" placeholder="e.g. 4242" maxlength="4" inputmode="numeric" class="inp">
+  <label class="lbl">Date</label>
+  <input type="date" id="e-date" class="inp">
+  <button class="save-btn" id="save-exp-btn" onclick="saveExpense()">💸 Save Expense</button>
+</div>
+</div>
+
+<!-- SELL MODAL -->
+<div class="overlay" id="sell-overlay">
+<div class="modal">
+  <div style="width:32px;height:4px;background:#e8d8d0;border-radius:2px;margin:0 auto 18px;"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#a85570;margin-bottom:4px;">💰 Mark as Sold</div>
+  <div id="sell-sub" style="font-size:12px;color:#9e8e88;margin-bottom:14px;"></div>
+  <label class="lbl">What did it sell for? *</label>
+  <input type="number" id="sell-price" placeholder="0.00" inputmode="decimal" class="inp">
+  <label class="lbl">How did they pay?</label>
+  <div class="pill-row" id="sell-pay-pills"></div>
+  <label class="lbl">Date Sold</label>
+  <input type="date" id="sell-date" class="inp">
+  <div style="display:flex;gap:8px;margin-top:14px;">
+    <button id="confirm-sell-btn" onclick="confirmSell()" class="save-btn" style="flex:1;margin-top:0;">✦ Confirm Sale</button>
+    <button onclick="closeSell()" style="flex:0.5;background:#fdf0f0;color:#c0392b;border:1px solid #f5d5d5;border-radius:12px;padding:13px;font-weight:700;cursor:pointer;font-family:'Jost',sans-serif;">Cancel</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL='https://vjgftwwcioahmalbienj.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZ2Z0d3djaW9haG1hbGJpZW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDc4MTYsImV4cCI6MjA5MzkyMzgxNn0.KJgkmaDhEjWcSA7ndBgj0d8pqF9NO8oTHXBp5CDTz4I';
+const PAY=['Cash','Card','Venmo','PayPal','Zelle','Check','Other'];
+const LOCS=['Booth','Shedd','Garage','Attic','Storage Unit','Home','Sold Elsewhere','Other'];
+const ECATS=['Gas','Meals','Booth Rent','Supplies','Booth Fees','Mileage','Other'];
+let items=[],expenses=[],curFilter='all',curDetailId=null,sellPay='Cash',buyPay='Cash',expPay='Cash',expCat='Gas',addLoc='Booth',imgData=null,rcptData=null,expRcpt=null,isBundle=false;
+
+async function sb(path,opts){
+  opts=opts||{};
+  const r=await fetch(SUPA_URL+'/rest/v1/'+path,Object.assign({},opts,{headers:Object.assign({apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json',Prefer:opts.prefer||''},opts.headers||{})}));
+  if(!r.ok)throw new Error(await r.text());
+  const t=await r.text();return t?JSON.parse(t):null;
+}
+
+function sync(ok,msg){document.getElementById('sync-dot').style.background=ok?'#7a9e8e':'#e07070';document.getElementById('sync-msg').textContent=msg;}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+function m$(v){if(v===null||v===undefined||v==='')return'--';return'$'+Number(v).toFixed(2);}
+function mn(v){return(v===null||v===undefined||v==='')?'':Number(v).toFixed(2);}
+function fd(iso){if(!iso)return'--';return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function today(){return new Date().toISOString().slice(0,10);}
+
+function pills(cid,arr,cb,def){
+  var c=document.getElementById(cid);if(!c)return;c.innerHTML='';
+  arr.forEach(function(m){var b=document.createElement('button');b.className='pill'+(m===def?' active':'');b.textContent=m;b.onclick=function(){c.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active');});b.classList.add('active');cb(m);};c.appendChild(b);});
+}
+
+function showPage(n){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-'+n).classList.add('active');
+  window.scrollTo(0,0);
+  if(n==='main')loadItems();
+  if(n==='sheet')renderSheet();
+  if(n==='expenses')loadExpenses();
+  if(n==='add')resetAdd();
+  if(n==='add-expense')resetExpForm();
+}
+function showDirect(n){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.getElementById('page-'+n).classList.add('active');window.scrollTo(0,0);}
+
+async function loadItems(){
+  document.getElementById('main-loading').style.display='flex';
+  document.getElementById('grid').style.display='none';
+  document.getElementById('empty').style.display='none';
+  sync(true,'Connecting...');
+  try{
+    var rows=await sb('items?order=date_added.desc');
+    items=(rows||[]).map(function(r){return{id:r.item_id,name:r.name||'',pricePaid:r.price_paid,payMethod:r.pay_method,datePurchased:r.date_purchased,notes:r.notes,image:r.image,receiptImage:r.receipt_image,status:r.status||'available',priceSold:r.price_sold,soldPayMethod:r.sold_pay_method,dateSold:r.date_sold,dateAdded:r.date_added,location:r.location,isBundle:r.is_bundle,bundleDesc:r.bundle_desc};});
+    sync(true,'Synced across all devices');
+    render();
+  }catch(e){
+    sync(false,'Error: '+e.message);
+    document.getElementById('main-loading').style.display='none';
+    document.getElementById('empty').style.display='flex';
+    document.getElementById('empty-txt').innerHTML='Could not connect.<br><small style="font-size:12px;">'+esc(e.message)+'</small>';
+  }
+}
+
+function setFilter(f,btn){curFilter=f;document.querySelectorAll('.fb').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');render();}
+
+function render(){
+  document.getElementById('main-loading').style.display='none';
+  var filtered=items.filter(function(i){if(curFilter==='all')return true;if(curFilter==='available')return i.status!=='sold';if(curFilter==='sold')return i.status==='sold';if(curFilter.startsWith('loc:'))return(i.location||'')===(curFilter.slice(4));return true;});
+  var sold=items.filter(function(i){return i.status==='sold';});
+  var profit=sold.reduce(function(s,i){return s+(parseFloat(i.priceSold)||0);},0)-sold.reduce(function(s,i){return s+(parseFloat(i.pricePaid)||0);},0);
+  document.getElementById('s-total').textContent=items.length;
+  document.getElementById('s-avail').textContent=items.filter(function(i){return i.status!=='sold';}).length;
+  document.getElementById('s-sold').textContent=sold.length;
+  var pe=document.getElementById('s-profit');pe.textContent=(profit<0?'-':'')+'$'+Math.abs(profit).toFixed(2);pe.style.color=profit>=0?'#7a9e8e':'#c0392b';
+  var grid=document.getElementById('grid'),empty=document.getElementById('empty');
+  if(filtered.length===0){grid.style.display='none';empty.style.display='flex';document.getElementById('empty-txt').innerHTML=items.length===0?'No treasures yet!<br>Tap + Add to begin.':'No items match this filter.';return;}
+  grid.style.display='grid';empty.style.display='none';
+  grid.innerHTML=filtered.map(function(item){
+    return '<div class="item-card" onclick="openDetail(''+item.id+'')">'
+      +'<div style="height:3px;background:linear-gradient(90deg,#f5dde4,#c9748a,#f5dde4);"></div>'
+      +(item.image?'<img src="'+item.image+'" style="width:100%;height:115px;object-fit:cover;display:block;">':'<div style="width:100%;height:115px;background:linear-gradient(135deg,#f7e8ec,#f5ece0);display:flex;align-items:center;justify-content:center;font-size:30px;">🌸</div>')
+      +'<div style="padding:9px 11px 11px;">'
+      +'<div style="font-family:Cormorant Garamond,serif;font-weight:700;font-size:14px;color:#3a2d2a;margin-bottom:4px;line-height:1.3;">'+(esc(item.name)||'Unnamed Piece')+'</div>'
+      +'<div style="font-size:11px;color:#9e8e88;">Paid: <b>'+m$(item.pricePaid)+'</b></div>'
+      +(item.status==='sold'?'<div style="font-size:11px;color:#7a9e8e;font-weight:700;">Sold: '+m$(item.priceSold)+'</div>':'')
+      +(item.location?'<div style="font-size:10px;background:#f5ecd8;color:#7a5c44;border-radius:5px;padding:2px 7px;display:inline-block;margin-top:4px;">📍 '+esc(item.location)+'</div>':'')
+      +'</div>'
+      +(item.status==='sold'?'<div style="position:absolute;top:10px;right:8px;background:#7a9e8e;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;">✓ SOLD</div>':'')
+      +(item.isBundle?'<div style="position:absolute;top:10px;left:8px;background:#c9a96e;color:#3a2d2a;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;">📦</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function openDetail(id){
+  var item=items.find(function(i){return i.id===id;});if(!item)return;
+  curDetailId=id;
+  document.getElementById('d-title').textContent=item.name||'Details';
+  var sold=item.status==='sold';
+  var profit=sold?(parseFloat(item.priceSold)-parseFloat(item.pricePaid)):null;
+  var h='';
+  if(item.image)h+='<img src="'+item.image+'" style="width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin-bottom:14px;">';
+  else h+='<div style="width:100%;height:150px;background:linear-gradient(135deg,#f7e8ec,#f5ece0);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:14px;">🌸</div>';
+  if(item.receiptImage)h+='<div style="font-size:10px;color:#7a5c44;letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:6px;">🧾 Receipt</div><img src="'+item.receiptImage+'" style="width:100%;max-height:130px;object-fit:cover;border-radius:10px;margin-bottom:14px;border:2px solid #f5ecd8;">';
+  h+='<div class="detail-card"><div class="detail-card-hdr">Purchase Details</div>';
+  h+=dr('Item',esc(item.name)||'Unnamed Piece');
+  if(item.isBundle&&item.bundleDesc)h+=dr('Bundle',esc(item.bundleDesc));
+  h+=dr('Paid',m$(item.pricePaid));
+  h+=dr('How Paid',esc(item.payMethod)||'--');
+  h+=dr('Date Bought',fd(item.datePurchased));
+  h+='<div class="dr" style="flex-wrap:wrap;gap:8px;"><span class="dl">📍 Location</span><div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;">'+LOCS.map(function(loc){return'<button onclick="updateLoc(''+id+'',''+loc+'')" style="border:1.5px solid '+(item.location===loc?'#a85570':'#e8d8d0')+';background:'+(item.location===loc?'#a85570':'white')+';color:'+(item.location===loc?'white':'#9e8e88')+';border-radius:14px;padding:4px 11px;font-size:10px;cursor:pointer;font-family:Jost,sans-serif;font-weight:700;">'+loc+'</button>';}).join('')+'</div></div>';
+  if(item.notes)h+=dr('Notes','<span style="font-weight:400;font-style:italic;color:#9e8e88;white-space:pre-wrap;">'+esc(item.notes)+'</span>');
+  h+='</div>';
+  if(sold){h+='<div class="detail-card"><div class="detail-card-hdr">Sale Details</div>'+dr('Sold For',m$(item.priceSold),'#7a9e8e')+dr('Buyer Paid With',esc(item.soldPayMethod)||'--')+dr('Date Sold',fd(item.dateSold))+dr('Profit',(profit>=0?'+':'')+m$(profit),profit>=0?'#7a9e8e':'#c0392b')+'</div>';}
+  h+=sold?'<div style="background:#d8ece5;color:#2a6b56;border-radius:12px;padding:14px;text-align:center;font-family:Cormorant Garamond,serif;font-style:italic;font-size:17px;margin-bottom:12px;">✨ Congratulations on the sale!</div>':'<button onclick="openSell()" style="width:100%;background:#7a9e8e;color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:Jost,sans-serif;">💰 Mark as Sold</button>';
+  h+='<button onclick="delItem()" style="width:100%;background:#fdf0f0;color:#c0392b;border:1px solid #f5d5d5;border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:Jost,sans-serif;">🗑 Remove This Item</button>';
+  document.getElementById('d-body').innerHTML=h;
+  showDirect('detail');
+}
+
+function dr(lbl,val,color){return'<div class="dr"><span class="dl">'+lbl+'</span><span class="dv" style="color:'+(color||'#3a2d2a')+';">'+val+'</span></div>';}
+
+async function updateLoc(id,loc){
+  try{await sb('items?item_id=eq.'+encodeURIComponent(id),{method:'PATCH',prefer:'return=representation',body:JSON.stringify({location:loc})});var item=items.find(function(i){return i.id===id;});if(item)item.location=loc;toast('📍 Location updated!');openDetail(id);}
+  catch(e){alert('Could not update: '+e.message);}
+}
+
+async function delItem(){
+  if(!confirm('Remove this item?'))return;
+  try{await sb('items?item_id=eq.'+encodeURIComponent(curDetailId),{method:'DELETE'});items=items.filter(function(i){return i.id!==curDetailId;});toast('Removed');showPage('main');}
+  catch(e){alert('Could not delete: '+e.message);}
+}
+
+function resetAdd(){
+  imgData=null;rcptData=null;isBundle=false;addLoc='Booth';buyPay='Cash';
+  ['a-name','a-paid','a-notes','a-bundle'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('a-date').value=today();
+  document.getElementById('img-area').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:6px;color:#9e8e88;"><div style="font-size:32px;">🌸</div><div style="font-size:12px;">Tap to photograph your piece</div></div>';
+  document.getElementById('rcpt-area').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7a5c44;"><div style="font-size:26px;">🧾</div><div style="font-size:12px;">Tap to photograph receipt or check</div></div>';
+  document.getElementById('bundle-box').style.display='none';
+  document.getElementById('b-no').classList.add('active');document.getElementById('b-yes').classList.remove('active');
+  document.getElementById('save-btn').disabled=false;document.getElementById('save-btn').textContent='🌷 Save This Treasure';
+  pills('pay-pills',PAY,function(m){buyPay=m;},'Cash');
+  pills('loc-pills',LOCS,function(m){addLoc=m;},'Booth');
+}
+
+function setBundle(v){isBundle=v;document.getElementById('b-no').classList.toggle('active',!v);document.getElementById('b-yes').classList.toggle('active',v);document.getElementById('bundle-box').style.display=v?'block':'none';}
+
+function compress(file,cb){var r=new FileReader();r.onload=function(ev){var img=new Image();img.onload=function(){var c=document.createElement('canvas');var MAX=800;var w=img.width,h=img.height;if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.75));};img.src=ev.target.result;};r.readAsDataURL(file);}
+
+function handleImg(input,type){var file=input.files[0];if(!file)return;compress(file,function(data){if(type==='item'){imgData=data;document.getElementById('img-area').innerHTML='<img src="'+data+'" style="width:100%;max-height:200px;object-fit:cover;display:block;">';}else{rcptData=data;document.getElementById('rcpt-area').innerHTML='<img src="'+data+'" style="width:100%;max-height:150px;object-fit:cover;display:block;">';}});}
+
+async function saveItem(){
+  var paid=document.getElementById('a-paid').value;if(!paid){alert('Please enter what you paid.');return;}
+  var btn=document.getElementById('save-btn');btn.disabled=true;btn.textContent='Saving...';
+  var row={item_id:Date.now().toString(),name:document.getElementById('a-name').value.trim()||null,price_paid:parseFloat(paid)||null,pay_method:buyPay,date_purchased:document.getElementById('a-date').value,notes:document.getElementById('a-notes').value.trim()||null,image:imgData,receipt_image:rcptData,status:'available',date_added:new Date().toISOString(),location:addLoc,is_bundle:isBundle,bundle_desc:document.getElementById('a-bundle').value.trim()||null};
+  try{await sb('items',{method:'POST',prefer:'return=representation',body:JSON.stringify(row)});toast('✨ Item saved!');showPage('main');}
+  catch(e){btn.disabled=false;btn.textContent='🌷 Save This Treasure';alert('Could not save: '+e.message);}
+}
+
+function openSell(){var item=items.find(function(i){return i.id===curDetailId;});if(!item)return;document.getElementById('sell-sub').textContent=(item.name||'This piece')+' — paid '+m$(item.pricePaid);document.getElementById('sell-price').value='';document.getElementById('sell-date').value=today();sellPay='Cash';pills('sell-pay-pills',PAY,function(m){sellPay=m;},'Cash');document.getElementById('sell-overlay').classList.add('open');}
+function closeSell(){document.getElementById('sell-overlay').classList.remove('open');}
+
+async function confirmSell(){
+  var price=document.getElementById('sell-price').value;if(!price){alert('Enter sold price.');return;}
+  var btn=document.getElementById('confirm-sell-btn');btn.disabled=true;btn.textContent='Saving...';
+  try{await sb('items?item_id=eq.'+encodeURIComponent(curDetailId),{method:'PATCH',prefer:'return=representation',body:JSON.stringify({status:'sold',price_sold:parseFloat(price),sold_pay_method:sellPay,date_sold:document.getElementById('sell-date').value})});toast('💰 Sale recorded!');closeSell();btn.disabled=false;btn.textContent='✦ Confirm Sale';showPage('main');}
+  catch(e){btn.disabled=false;btn.textContent='✦ Confirm Sale';alert('Could not save: '+e.message);}
+}
+
+function renderSheet(){
+  var body=document.getElementById('sheet-body');var tP=0,tS=0,tSC=0;
+  body.innerHTML=items.map(function(item){
+    var sold=item.status==='sold';var profit=sold?(parseFloat(item.priceSold)||0)-(parseFloat(item.pricePaid)||0):null;
+    tP+=parseFloat(item.pricePaid)||0;if(sold){tS+=parseFloat(item.priceSold)||0;tSC+=parseFloat(item.pricePaid)||0;}
+    var thumb=item.image?'<img src="'+item.image+'" style="width:28px;height:28px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:6px;">':'<span style="display:inline-block;width:28px;height:28px;background:#f7e8ec;border-radius:4px;text-align:center;line-height:28px;margin-right:6px;">🌸</span>';
+    var nameCell='<span onclick="openDetail(''+item.id+'');showDirect('detail');" style="cursor:pointer;display:inline-flex;align-items:center;">'+thumb+'<span style="color:#a85570;text-decoration:underline;">'+(esc(item.name)||'Unnamed')+'</span></span>';
+    return'<tr><td>'+nameCell+'</td><td><span style="background:#f5ecd8;color:#7a5c44;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">'+(item.location||'--')+'</span></td><td>'+m$(item.pricePaid)+'</td><td>'+(esc(item.payMethod)||'--')+'</td><td>'+fd(item.datePurchased)+'</td><td style="color:'+(sold?'#7a9e8e':'inherit')+'">'+(sold?m$(item.priceSold):'--')+'</td><td>'+(sold?(esc(item.soldPayMethod)||'--'):'--')+'</td><td>'+fd(item.dateSold)+'</td><td style="color:'+(profit!==null?(profit>=0?'#7a9e8e':'#c0392b'):'inherit')+'">'+(profit!==null?(profit>=0?'+':'')+m$(profit):'--')+'</td><td><span style="background:'+(sold?'#d8ece5':'#f5ecd8')+';color:'+(sold?'#2a6b56':'#7a5c44')+';border-radius:8px;padding:2px 9px;font-size:10px;font-weight:700;">'+(sold?'Sold':'For Sale')+'</span></td></tr>';
+  }).join('');
+  var tPr=tS-tSC;
+  document.getElementById('sheet-foot').innerHTML='<td><b>Totals</b></td><td></td><td><b>'+m$(tP)+'</b></td><td colspan="2"></td><td style="color:#7a9e8e;"><b>'+m$(tS)+'</b></td><td colspan="2"></td><td style="color:'+(tPr>=0?'#7a9e8e':'#c0392b')+'"><b>'+(tPr>=0?'+':'')+m$(tPr)+'</b></td><td></td>';
+}
+
+function dlExcel(){
+  var h=['Item','Location','Paid','How Paid','Date Bought','Sold For','Buyer Paid','Date Sold','Profit','Status'];
+  var rows=items.map(function(i){var sold=i.status==='sold';var p=sold?(parseFloat(i.priceSold)||0)-(parseFloat(i.pricePaid)||0):null;return[i.name||'',i.location||'',mn(i.pricePaid),i.payMethod||'',i.datePurchased||'',sold?mn(i.priceSold):'',sold?(i.soldPayMethod||''):'',i.dateSold||'',p!==null?p.toFixed(2):'',sold?'Sold':'For Sale'];});
+  var tP=0,tS=0,tSC=0;items.forEach(function(i){tP+=parseFloat(i.pricePaid)||0;if(i.status==='sold'){tS+=parseFloat(i.priceSold)||0;tSC+=parseFloat(i.pricePaid)||0;}});
+  rows.push(['TOTALS','',tP.toFixed(2),'','',tS.toFixed(2),'',(tS-tSC).toFixed(2),'','']);
+  var csv=[h].concat(rows).map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('
+');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));a.download='VintageBooth_'+today()+'.csv';a.click();toast('Downloaded!');
+}
+
+async function loadExpenses(){
+  sync(true,'Loading...');
+  try{var rows=await sb('expenses?order=date.desc');expenses=rows||[];sync(true,'Synced');renderExpenses();}
+  catch(e){sync(false,'Error: '+e.message);renderExpenses();}
+}
+
+function renderExpenses(){
+  var now=new Date();
+  var total=expenses.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+  var month=expenses.filter(function(e){if(!e.date)return false;var d=new Date(e.date+'T12:00:00');return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+  document.getElementById('e-total').textContent='$'+total.toFixed(2);
+  document.getElementById('e-month').textContent='$'+month.toFixed(2);
+  document.getElementById('e-count').textContent=expenses.length;
+  var list=document.getElementById('exp-list'),empty=document.getElementById('exp-empty');
+  if(expenses.length===0){list.innerHTML='';empty.style.display='flex';return;}
+  empty.style.display='none';
+  var icons={Gas:'⛽',Meals:'🍽','Booth Rent':'🏪',Supplies:'🛍','Booth Fees':'🏷',Mileage:'🚗',Other:'💼'};
+  list.innerHTML=expenses.map(function(e){
+    return'<div class="detail-card">'+(e.receipt_image?'<img src="'+e.receipt_image+'" style="width:100%;max-height:110px;object-fit:cover;display:block;">':'')+'<div style="padding:11px 14px;display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-family:Cormorant Garamond,serif;font-size:16px;font-weight:700;color:#3a2d2a;">'+(icons[e.category]||'💼')+' '+(esc(e.description)||esc(e.category))+'</div><div style="font-size:11px;color:#9e8e88;margin-top:2px;">'+fd(e.date)+(e.pay_method?' · '+esc(e.pay_method):'')+(e.card_last4?' · ****'+esc(e.card_last4):'')+'</div><span style="background:#f5ecd8;color:#7a5c44;border-radius:6px;padding:1px 8px;font-size:10px;font-weight:700;margin-top:4px;display:inline-block;">'+esc(e.category)+'</span></div><div style="text-align:right;"><div style="font-family:Cormorant Garamond,serif;font-size:19px;font-weight:700;color:#a85570;">$'+Number(e.amount).toFixed(2)+'</div><button onclick="delExp(''+e.id+'')" style="background:none;border:none;color:#9e8e88;cursor:pointer;font-size:12px;margin-top:4px;">🗑 Remove</button></div></div></div>';
+  }).join('');
+}
+
+async function delExp(id){if(!confirm('Remove this expense?'))return;try{await sb('expenses?id=eq.'+encodeURIComponent(id),{method:'DELETE'});expenses=expenses.filter(function(e){return e.id!==id;});toast('Removed');renderExpenses();}catch(e){alert('Could not delete.');}}
+
+function resetExpForm(){
+  expRcpt=null;expPay='Cash';expCat='Gas';
+  ['e-amount','e-desc','e-card'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('e-date').value=today();
+  document.getElementById('exp-rcpt-area').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#7a5c44;"><div style="font-size:26px;">🧾</div><div style="font-size:12px;">Receipt, check, or card statement</div></div>';
+  document.getElementById('eri').value='';
+  document.getElementById('save-exp-btn').disabled=false;document.getElementById('save-exp-btn').textContent='💸 Save Expense';
+  pills('exp-cat-pills',ECATS,function(m){expCat=m;},'Gas');
+  pills('exp-pay-pills',PAY,function(m){expPay=m;},'Cash');
+}
+
+function handleExpImg(input){var file=input.files[0];if(!file)return;compress(file,function(data){expRcpt=data;document.getElementById('exp-rcpt-area').innerHTML='<img src="'+data+'" style="width:100%;max-height:140px;object-fit:cover;display:block;">';});}
+
+async function saveExpense(){
+  var amt=document.getElementById('e-amount').value;if(!amt){alert('Enter the amount.');return;}
+  var btn=document.getElementById('save-exp-btn');btn.disabled=true;btn.textContent='Saving...';
+  var exp={id:Date.now().toString(),category:expCat,amount:parseFloat(amt),description:document.getElementById('e-desc').value.trim()||null,pay_method:expPay,card_last4:document.getElementById('e-card').value.trim()||null,date:document.getElementById('e-date').value,receipt_image:expRcpt,date_added:new Date().toISOString()};
+  try{await sb('expenses',{method:'POST',prefer:'return=representation',body:JSON.stringify(exp)});toast('Expense saved!');showPage('expenses');}
+  catch(e){btn.disabled=false;btn.textContent='💸 Save Expense';alert('Could not save: '+e.message);}
+}
+
+document.getElementById('sell-overlay').addEventListener('click',function(e){if(e.target===this)closeSell();});
+loadItems();
+</script>
+</body>
+</html>
