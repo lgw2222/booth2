@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vintage Booth">
+<meta name="theme-color" content="#8B4A6B">
+<title>The Vintage Booth</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Inter', sans-serif; background: #FAF7F4; color: #2C1810; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+/* NAV */
+.topbar { background: linear-gradient(160deg, #5C2D4A, #8B4A6B, #B07A95); padding: 18px 16px 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(92,45,74,0.3); }
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; }
+.app-name { font-family: 'Playfair Display', serif; font-size: 22px; color: white; font-weight: 700; }
+.app-name em { font-style: italic; font-weight: 500; }
+.app-sub { font-size: 10px; color: rgba(255,255,255,0.65); letter-spacing: 2px; margin-top: 2px; }
+.topbar-btns { display: flex; gap: 6px; }
+.tbtn { background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 7px 12px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; }
+.tbtn-gold { background: #C4955A; border-color: #C4955A; color: white; font-weight: 600; }
+.gold-line { height: 2px; background: linear-gradient(90deg, transparent, rgba(196,149,90,0.6), #C4955A, rgba(196,149,90,0.6), transparent); margin-top: 12px; }
+.syncbar { background: rgba(92,45,74,0.12); padding: 4px 14px; font-size: 11px; color: #8B4A6B; display: flex; align-items: center; gap: 6px; }
+.syncdot { width: 7px; height: 7px; border-radius: 50%; background: #C4955A; flex-shrink: 0; }
+.syncdot.ok { background: #5A9E7A; }
+.syncdot.err { background: #C0392B; }
+
+/* STATS */
+.stats { display: flex; background: white; border-bottom: 1px solid #EDE0D8; }
+.stat { flex: 1; padding: 13px 4px; text-align: center; border-right: 1px solid #EDE0D8; }
+.stat:last-child { border-right: none; }
+.stat-n { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; line-height: 1; }
+.stat-l { font-size: 9px; color: #9E8E88; margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* FILTERS */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px 0; }
+.fb { border: 1px solid #DDD0C8; background: white; border-radius: 18px; padding: 5px 12px; font-size: 11px; cursor: pointer; color: #7A6A62; font-family: 'Inter', sans-serif; font-weight: 500; transition: all 0.15s; }
+.fb.on { background: #8B4A6B; color: white; border-color: #8B4A6B; }
+
+/* GRID */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 14px 60px; }
+.card { background: white; border-radius: 14px; overflow: hidden; border: 1px solid #EDE0D8; cursor: pointer; position: relative; box-shadow: 0 1px 6px rgba(139,74,107,0.08); transition: transform 0.15s; }
+.card:active { transform: scale(0.97); }
+.card.sold-card { opacity: 0.7; }
+.card-stripe { height: 3px; background: linear-gradient(90deg, #EDE0D8, #8B4A6B, #EDE0D8); }
+.card-img { width: 100%; height: 118px; object-fit: cover; display: block; }
+.card-noimg { width: 100%; height: 118px; background: linear-gradient(135deg, #F5E8EE, #F0E8E0); display: flex; align-items: center; justify-content: center; font-size: 32px; }
+.card-body { padding: 9px 11px 11px; }
+.card-name { font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 500; color: #2C1810; margin-bottom: 4px; line-height: 1.3; }
+.card-paid { font-size: 11px; color: #7A6A62; }
+.card-sold-price { font-size: 11px; color: #5A9E7A; font-weight: 600; }
+.card-loc { font-size: 10px; background: #F5ECD8; color: #7A5C30; border-radius: 5px; padding: 2px 7px; display: inline-block; margin-top: 4px; }
+.sold-badge { position: absolute; top: 10px; right: 8px; background: #5A9E7A; color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; letter-spacing: 0.5px; }
+.bundle-badge { position: absolute; top: 10px; left: 8px; background: #C4955A; color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+
+/* EMPTY / LOADING */
+.center-msg { display: flex; flex-direction: column; align-items: center; padding: 50px 24px; gap: 14px; }
+.spinner { width: 32px; height: 32px; border: 3px solid #EDE0D8; border-top-color: #8B4A6B; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.msg-icon { font-size: 44px; }
+.msg-txt { font-family: 'Playfair Display', serif; font-style: italic; color: #9E8E88; font-size: 17px; text-align: center; line-height: 1.6; }
+
+/* PAGES */
+.page { display: none; }
+.page.on { display: block; min-height: 100vh; }
+.phdr { display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: white; border-bottom: 2px solid #EDE0D8; position: sticky; top: 0; z-index: 40; }
+.phdr-title { font-family: 'Playfair Display', serif; font-size: 19px; color: #8B4A6B; }
+.phdr-right { margin-left: auto; }
+.back { background: none; border: none; color: #8B4A6B; font-size: 14px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; flex-shrink: 0; }
+
+/* FORM */
+.form { padding: 16px; display: flex; flex-direction: column; gap: 5px; padding-bottom: 60px; }
+.lbl { font-size: 10px; font-weight: 700; color: #8B4A6B; margin-top: 14px; display: block; letter-spacing: 1.2px; text-transform: uppercase; }
+.lbl-gold { font-size: 10px; font-weight: 700; color: #7A5C30; margin-top: 14px; display: block; letter-spacing: 1.2px; text-transform: uppercase; }
+.inp { border: 1.5px solid #DDD0C8; border-radius: 10px; padding: 11px 13px; font-size: 16px; background: white; outline: none; width: 100%; font-family: 'Inter', sans-serif; color: #2C1810; -webkit-appearance: none; }
+.inp:focus { border-color: #8B4A6B; }
+textarea.inp { min-height: 68px; resize: vertical; }
+.upload-box { border: 2px dashed #DDD0C8; border-radius: 12px; overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center; background: #FAF5F8; transition: border-color 0.2s; }
+.upload-box:active { border-color: #8B4A6B; }
+.upload-box img { width: 100%; object-fit: cover; display: block; }
+.upload-inner { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 22px; color: #9E8E88; }
+.upload-icon { font-size: 30px; }
+.upload-txt { font-size: 12px; text-align: center; line-height: 1.5; }
+.upload-box-gold { border-color: #C4955A; background: #FAF5EC; }
+.upload-box-gold .upload-inner { color: #7A5C30; }
+.pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 7px; }
+.pill { border: 1.5px solid #DDD0C8; background: white; border-radius: 20px; padding: 6px 14px; font-size: 12px; cursor: pointer; color: #2C1810; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+.pill.on { background: #8B4A6B; color: white; border-color: #8B4A6B; }
+.pill-gold.on { background: #C4955A; border-color: #C4955A; color: white; }
+.bundle-hint { background: #F5ECD8; border: 1px solid #C4955A; border-radius: 10px; padding: 12px; margin-top: 8px; font-size: 12px; color: #7A5C30; line-height: 1.6; font-style: italic; display: none; }
+.save-btn { background: linear-gradient(135deg, #5C2D4A, #8B4A6B); color: white; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 16px; width: 100%; font-family: 'Inter', sans-serif; letter-spacing: 0.3px; box-shadow: 0 3px 12px rgba(139,74,107,0.35); }
+.save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.save-btn-green { background: linear-gradient(135deg, #2D7A5A, #5A9E7A); box-shadow: 0 3px 12px rgba(90,158,122,0.35); }
+
+/* DETAIL */
+.dbody { padding: 16px 16px 60px; }
+.dcard { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 14px; border: 1px solid #EDE0D8; box-shadow: 0 1px 6px rgba(139,74,107,0.07); }
+.dcard-hdr { background: linear-gradient(135deg, #FAF0F5, #F5E8EE); padding: 9px 14px; border-bottom: 1px solid #EDE0D8; font-family: 'Playfair Display', serif; font-size: 13px; font-style: italic; color: #8B4A6B; }
+.drow { display: flex; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid #EDE0D8; align-items: flex-start; gap: 8px; }
+.drow:last-child { border-bottom: none; }
+.dlbl { font-size: 11px; color: #9E8E88; flex-shrink: 0; }
+.dval { font-size: 13px; font-weight: 600; text-align: right; color: #2C1810; }
+.loc-btns { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
+.loc-btn { border: 1.5px solid #DDD0C8; background: white; color: #9E8E88; border-radius: 14px; padding: 4px 11px; font-size: 10px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; transition: all 0.15s; }
+.loc-btn.on { border-color: #8B4A6B; background: #8B4A6B; color: white; }
+.success-box { background: linear-gradient(135deg, #D8ECE5, #C8E8D8); color: #1A5E40; border-radius: 12px; padding: 14px; text-align: center; font-family: 'Playfair Display', serif; font-style: italic; font-size: 17px; margin-bottom: 14px; border: 1px solid #B8DDD0; }
+.del-btn { width: 100%; background: #FDF0F0; color: #C0392B; border: 1px solid #F5D5D5; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 8px; }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(44,24,16,0.6); z-index: 200; align-items: flex-end; justify-content: center; }
+.overlay.on { display: flex; }
+.modal { background: #FAF7F4; border-radius: 22px 22px 0 0; padding: 26px 20px 34px; width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto; }
+.modal-handle { width: 34px; height: 4px; background: #DDD0C8; border-radius: 2px; margin: 0 auto 18px; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #8B4A6B; margin-bottom: 4px; }
+.modal-sub { font-size: 12px; color: #9E8E88; margin-bottom: 14px; }
+.modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+.cancel-btn { flex: 0.5; background: #FDF0F0; color: #C0392B; border: 1px solid #F5D5D5; border-radius: 12px; padding: 13px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+
+/* SHEET */
+.sheet-wrap { overflow-x: auto; padding: 14px; }
+.sheet-tbl { border-collapse: collapse; width: 100%; min-width: 580px; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #EDE0D8; font-size: 12px; }
+.sheet-tbl thead tr { background: linear-gradient(135deg, #5C2D4A, #8B4A6B); }
+.sheet-tbl th { color: white; padding: 10px 11px; text-align: left; font-size: 11px; font-weight: 600; white-space: nowrap; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
+.sheet-tbl td { padding: 10px 11px; border-bottom: 1px solid #EDE0D8; white-space: nowrap; color: #2C1810; }
+.sheet-tbl tr:nth-child(even) td { background: #FAF0F5; }
+.sheet-tbl tfoot td { background: #F5ECD8; font-weight: 700; border-bottom: none; padding: 10px 11px; }
+.status-pill { border-radius: 8px; padding: 2px 9px; font-size: 10px; font-weight: 700; }
+.sp-sale { background: #F5ECD8; color: #7A5C30; }
+.sp-sold { background: #D8ECE5; color: #1A5E40; }
+.loc-pill { background: #F5ECD8; color: #7A5C30; border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 700; }
+
+/* EXPENSES */
+.exp-card { background: white; border-radius: 14px; overflow: hidden; border: 1px solid #EDE0D8; box-shadow: 0 1px 6px rgba(139,74,107,0.07); }
+.exp-body { padding: 11px 14px; display: flex; justify-content: space-between; align-items: flex-start; }
+.exp-name { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 500; color: #2C1810; }
+.exp-meta { font-size: 11px; color: #9E8E88; margin-top: 2px; }
+.exp-cat { background: #F5ECD8; color: #7A5C30; border-radius: 6px; padding: 1px 8px; font-size: 10px; font-weight: 700; display: inline-block; margin-top: 4px; }
+.exp-amt { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: #8B4A6B; text-align: right; }
+.exp-del { background: none; border: none; color: #9E8E88; cursor: pointer; font-size: 12px; margin-top: 4px; display: block; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #2C1810; color: white; padding: 9px 18px; border-radius: 20px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="pg-main" class="page on">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="app-name">🌸 The <em>Vintage</em> Booth</div>
+        <div class="app-sub">✦ ANTIQUES & TREASURES ✦</div>
+      </div>
+      <div class="topbar-btns">
+        <button class="tbtn" id="btn-exp">💸</button>
+        <button class="tbtn" id="btn-sheet">📊</button>
+        <button class="tbtn tbtn-gold" id="btn-add">+ Add</button>
+      </div>
+    </div>
+    <div class="gold-line"></div>
+  </div>
+  <div class="syncbar"><span class="syncdot" id="sdot"></span><span id="smsg">Connecting...</span></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="sn-total" style="color:#C4955A">0</div><div class="stat-l">Items</div></div>
+    <div class="stat"><div class="stat-n" id="sn-avail" style="color:#8B4A6B">0</div><div class="stat-l">For Sale</div></div>
+    <div class="stat"><div class="stat-n" id="sn-sold" style="color:#5A9E7A">0</div><div class="stat-l">Sold</div></div>
+    <div class="stat"><div class="stat-n" id="sn-profit" style="color:#5A9E7A">$0</div><div class="stat-l">Profit</div></div>
+  </div>
+  <div class="filters" id="filters">
+    <button class="fb on" data-f="all">All</button>
+    <button class="fb" data-f="available">For Sale</button>
+    <button class="fb" data-f="sold">Sold</button>
+    <button class="fb" data-f="loc:Booth">📍 Booth</button>
+    <button class="fb" data-f="loc:Shedd">🏛 Shedd</button>
+    <button class="fb" data-f="loc:Garage">🏠 Garage</button>
+    <button class="fb" data-f="loc:Attic">🪜 Attic</button>
+    <button class="fb" data-f="loc:Storage Unit">📦 Storage</button>
+    <button class="fb" data-f="loc:Sold Elsewhere">🛒 Sold Elsewhere</button>
+  </div>
+  <div id="main-loading" class="center-msg"><div class="spinner"></div><div class="msg-txt">Loading your treasures...</div></div>
+  <div id="grid" class="grid" style="display:none"></div>
+  <div id="empty" class="center-msg" style="display:none"><div class="msg-icon">🌷</div><div class="msg-txt" id="empty-txt">No treasures yet!<br>Tap + Add to begin.</div></div>
+</div>
+
+<div id="pg-add" class="page">
+  <div class="phdr"><button class="back" id="back-add">← Back</button><span class="phdr-title">✦ Add a Treasure</span></div>
+  <div class="form">
+    <label class="lbl">Item Photo</label>
+    <div class="upload-box" id="img-box" style="min-height:130px" onclick="document.getElementById('fi').click()">
+      <div class="upload-inner"><div class="upload-icon">🌸</div><div class="upload-txt">Tap to photograph your piece</div></div>
+    </div>
+    <input type="file" id="fi" accept="image/*" capture="environment" style="display:none">
+    <label class="lbl-gold">Receipt / Check Photo (optional)</label>
+    <div class="upload-box upload-box-gold" id="rcpt-box" style="min-height:90px" onclick="document.getElementById('ri').click()">
+      <div class="upload-inner"><div class="upload-icon">🧾</div><div class="upload-txt">Tap to photograph receipt or check</div></div>
+    </div>
+    <input type="file" id="ri" accept="image/*" capture="environment" style="display:none">
+    <label class="lbl">Item Name (optional)</label>
+    <input class="inp" id="a-name" type="text" placeholder="e.g. Victorian oil painting">
+    <label class="lbl">Bundle Purchase?</label>
+    <div class="pills" id="bundle-pills">
+      <button class="pill on" data-v="no">No — single item</button>
+      <button class="pill" data-v="yes">Yes — bundle</button>
+    </div>
+    <div class="bundle-hint" id="bundle-hint">💡 Enter the total you paid for the whole lot. List each piece in the Notes field. As you sell each piece, record the price and the app tracks your profit.</div>
+    <input class="inp" id="a-bundle" type="text" placeholder="Bundle description (optional)" style="display:none;margin-top:8px">
+    <label class="lbl">What did you pay? *</label>
+    <input class="inp" id="a-paid" type="number" placeholder="0.00" inputmode="decimal" step="0.01">
+    <label class="lbl">How did you pay?</label>
+    <div class="pills" id="pay-pills"></div>
+    <label class="lbl">Location</label>
+    <div class="pills" id="loc-pills"></div>
+    <label class="lbl">Date Purchased</label>
+    <input class="inp" id="a-date" type="date">
+    <label class="lbl">Notes (optional)</label>
+    <textarea class="inp" id="a-notes" placeholder="Condition, era, style, bundle pieces included..."></textarea>
+    <button class="save-btn" id="save-item-btn">🌷 Save This Treasure</button>
+  </div>
+</div>
+
+<div id="pg-detail" class="page">
+  <div class="phdr"><button class="back" id="back-detail">← Back</button><span class="phdr-title" id="d-title"></span></div>
+  <div class="dbody" id="d-body"></div>
+</div>
+
+<div id="pg-sheet" class="page">
+  <div class="phdr">
+    <button class="back" id="back-sheet">← Back</button>
+    <span class="phdr-title">📊 Spreadsheet</span>
+    <div class="phdr-right"><button onclick="dlExcel()" style="background:#2D7A5A;color:white;border:none;border-radius:18px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;">⬇ Excel</button></div>
+  </div>
+  <div class="sheet-wrap">
+    <table class="sheet-tbl">
+      <thead><tr><th>Item</th><th>Location</th><th>Paid</th><th>How Paid</th><th>Date Bought</th><th>Sold For</th><th>Buyer Paid</th><th>Date Sold</th><th>Profit</th><th>Status</th></tr></thead>
+      <tbody id="sheet-body"></tbody>
+      <tfoot><tr id="sheet-foot"></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<div id="pg-expenses" class="page">
+  <div class="phdr">
+    <button class="back" id="back-exp">← Back</button>
+    <span class="phdr-title">💸 Expenses</span>
+    <div class="phdr-right"><button id="btn-add-exp" style="background:#C4955A;color:white;border:none;border-radius:18px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;">+ Add</button></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="en-total" style="color:#8B4A6B">$0</div><div class="stat-l">Total</div></div>
+    <div class="stat"><div class="stat-n" id="en-month" style="color:#7A5C30">$0</div><div class="stat-l">This Month</div></div>
+    <div class="stat"><div class="stat-n" id="en-count" style="color:#9E8E88">0</div><div class="stat-l">Entries</div></div>
+  </div>
+  <div id="exp-list" style="padding:12px 14px 60px;display:flex;flex-direction:column;gap:10px;"></div>
+  <div id="exp-empty" class="center-msg" style="display:none"><div class="msg-icon">💰</div><div class="msg-txt">No expenses yet.<br>Tap + Add to record one.</div></div>
+</div>
+
+<div id="pg-add-exp" class="page">
+  <div class="phdr"><button class="back" id="back-add-exp">← Back</button><span class="phdr-title">+ Add Expense</span></div>
+  <div class="form">
+    <label class="lbl-gold">Receipt / Proof Photo (optional)</label>
+    <div class="upload-box upload-box-gold" id="exp-rcpt-box" style="min-height:90px" onclick="document.getElementById('eri').click()">
+      <div class="upload-inner"><div class="upload-icon">🧾</div><div class="upload-txt">Receipt, check, or card statement</div></div>
+    </div>
+    <input type="file" id="eri" accept="image/*" capture="environment" style="display:none">
+    <label class="lbl">Category</label>
+    <div class="pills" id="exp-cat-pills"></div>
+    <label class="lbl">Amount *</label>
+    <input class="inp" id="e-amount" type="number" placeholder="0.00" inputmode="decimal" step="0.01">
+    <label class="lbl">Description (optional)</label>
+    <input class="inp" id="e-desc" type="text" placeholder="e.g. Gas to estate sale, Booth rent...">
+    <label class="lbl">How Paid</label>
+    <div class="pills" id="exp-pay-pills"></div>
+    <label class="lbl">Last 4 digits of card (optional)</label>
+    <input class="inp" id="e-card" type="text" placeholder="e.g. 4242" maxlength="4" inputmode="numeric">
+    <label class="lbl">Date</label>
+    <input class="inp" id="e-date" type="date">
+    <button class="save-btn" id="save-exp-btn">💸 Save Expense</button>
+  </div>
+</div>
+
+<!-- SELL MODAL -->
+<div class="overlay" id="sell-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 Mark as Sold</div>
+    <div class="modal-sub" id="sell-sub"></div>
+    <label class="lbl">What did it sell for? *</label>
+    <input class="inp" id="sell-price" type="number" placeholder="0.00" inputmode="decimal" step="0.01">
+    <label class="lbl">How did they pay?</label>
+    <div class="pills" id="sell-pay-pills"></div>
+    <label class="lbl">Date Sold</label>
+    <input class="inp" id="sell-date" type="date">
+    <div class="modal-btns">
+      <button class="save-btn save-btn-green" id="confirm-sell-btn" style="flex:1;margin-top:0">✦ Confirm Sale</button>
+      <button class="cancel-btn" id="cancel-sell-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SUPA_URL = 'https://vjgftwwcioahmalbienj.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZ2Z0d3djaW9haG1hbGJpZW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDc4MTYsImV4cCI6MjA5MzkyMzgxNn0.KJgkmaDhEjWcSA7ndBgj0d8pqF9NO8oTHXBp5CDTz4I';
+var PAY = ['Cash','Card','Venmo','PayPal','Zelle','Check','Other'];
+var LOCS = ['Booth','Shedd','Garage','Attic','Storage Unit','Home','Sold Elsewhere','Other'];
+var ECATS = ['Gas','Meals','Booth Rent','Supplies','Booth Fees','Mileage','Other'];
+var EICONS = {Gas:'⛽',Meals:'🍽','Booth Rent':'🏪',Supplies:'🛍','Booth Fees':'🏷',Mileage:'🚗',Other:'💼'};
+
+var items = [];
+var expenses = [];
+var curFilter = 'all';
+var curItemId = null;
+var imgData = null;
+var rcptData = null;
+var expRcptData = null;
+var buyPay = 'Cash';
+var sellPay = 'Cash';
+var expPay = 'Cash';
+var expCat = 'Gas';
+var addLoc = 'Booth';
+var isBundle = false;
+
+// ── API ──
+function api(path, opts) {
+  var options = opts || {};
+  var headers = {
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Content-Type': 'application/json'
+  };
+  if (options.prefer) headers['Prefer'] = options.prefer;
+  return fetch(SUPA_URL + '/rest/v1/' + path, {
+    method: options.method || 'GET',
+    headers: headers,
+    body: options.body || undefined
+  }).then(function(r) {
+    if (!r.ok) return r.text().then(function(t) { throw new Error(t); });
+    return r.text().then(function(t) { return t ? JSON.parse(t) : null; });
+  });
+}
+
+// ── HELPERS ──
+function setSyncStatus(ok, msg) {
+  var dot = document.getElementById('sdot');
+  var label = document.getElementById('smsg');
+  dot.className = 'syncdot ' + (ok === true ? 'ok' : ok === false ? 'err' : '');
+  label.textContent = msg;
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(function() { t.classList.remove('on'); }, 2500);
+}
+function fmt$(v) {
+  if (v === null || v === undefined || v === '') return '--';
+  return '$' + Number(v).toFixed(2);
+}
+function fmtN(v) {
+  return (v === null || v === undefined || v === '') ? '' : Number(v).toFixed(2);
+}
+function fmtDate(iso) {
+  if (!iso) return '--';
+  return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+function safeText(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function today() { return new Date().toISOString().slice(0,10); }
+
+// ── PAGES ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('on'); });
+  var pg = document.getElementById('pg-' + name);
+  if (pg) pg.classList.add('on');
+  window.scrollTo(0, 0);
+}
+
+// ── PILLS ──
+function makePills(containerId, options, onChange, defaultVal, extraClass) {
+  var c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'pill' + (extraClass ? ' ' + extraClass : '') + (opt === defaultVal ? ' on' : '');
+    btn.textContent = opt;
+    btn.addEventListener('click', function() {
+      c.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('on'); });
+      btn.classList.add('on');
+      onChange(opt);
+    });
+    c.appendChild(btn);
+  });
+}
+
+// ── ROW CONVERSION ──
+function rowToItem(r) {
+  return {
+    id: r.item_id, name: r.name || '', pricePaid: r.price_paid,
+    payMethod: r.pay_method, datePurchased: r.date_purchased,
+    notes: r.notes, image: r.image, receiptImage: r.receipt_image,
+    status: r.status || 'available', priceSold: r.price_sold,
+    soldPayMethod: r.sold_pay_method, dateSold: r.date_sold,
+    dateAdded: r.date_added, location: r.location,
+    isBundle: r.is_bundle || false, bundleDesc: r.bundle_desc
+  };
+}
+function itemToRow(item) {
+  return {
+    item_id: item.id, name: item.name || null,
+    price_paid: parseFloat(item.pricePaid) || null,
+    pay_method: item.payMethod || null,
+    date_purchased: item.datePurchased || null,
+    notes: item.notes || null, image: item.image || null,
+    receipt_image: item.receiptImage || null,
+    status: 'available',
+    date_added: new Date().toISOString(),
+    location: item.location || null,
+    is_bundle: item.isBundle || false,
+    bundle_desc: item.bundleDesc || null
+  };
+}
+
+// ── LOAD ITEMS ──
+function loadItems() {
+  document.getElementById('main-loading').style.display = 'flex';
+  document.getElementById('grid').style.display = 'none';
+  document.getElementById('empty').style.display = 'none';
+  setSyncStatus(null, 'Connecting...');
+  api('items?order=date_added.desc').then(function(rows) {
+    items = (rows || []).map(rowToItem);
+    setSyncStatus(true, 'Synced across all devices');
+    renderGrid();
+  }).catch(function(e) {
+    setSyncStatus(false, 'Error: ' + e.message);
+    document.getElementById('main-loading').style.display = 'none';
+    document.getElementById('empty').style.display = 'flex';
+    document.getElementById('empty-txt').innerHTML = 'Could not connect.<br><small>' + safeText(e.message) + '</small>';
+  });
+}
+
+// ── RENDER GRID ──
+function renderGrid() {
+  document.getElementById('main-loading').style.display = 'none';
+  var filtered = items.filter(function(i) {
+    if (curFilter === 'all') return true;
+    if (curFilter === 'available') return i.status !== 'sold';
+    if (curFilter === 'sold') return i.status === 'sold';
+    if (curFilter.indexOf('loc:') === 0) return (i.location || '') === curFilter.slice(4);
+    return true;
+  });
+  var sold = items.filter(function(i) { return i.status === 'sold'; });
+  var profit = sold.reduce(function(s,i) { return s + (parseFloat(i.priceSold)||0); }, 0)
+             - sold.reduce(function(s,i) { return s + (parseFloat(i.pricePaid)||0); }, 0);
+  document.getElementById('sn-total').textContent = items.length;
+  document.getElementById('sn-avail').textContent = items.filter(function(i) { return i.status !== 'sold'; }).length;
+  document.getElementById('sn-sold').textContent = sold.length;
+  var pe = document.getElementById('sn-profit');
+  pe.textContent = (profit < 0 ? '-' : '') + '$' + Math.abs(profit).toFixed(2);
+  pe.style.color = profit >= 0 ? '#5A9E7A' : '#C0392B';
+  var grid = document.getElementById('grid');
+  var empty = document.getElementById('empty');
+  if (filtered.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    document.getElementById('empty-txt').innerHTML = items.length === 0
+      ? 'No treasures yet!<br>Tap + Add to begin.'
+      : 'No items match this filter.';
+    return;
+  }
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+  grid.innerHTML = '';
+  filtered.forEach(function(item) {
+    var card = document.createElement('div');
+    card.className = 'card' + (item.status === 'sold' ? ' sold-card' : '');
+    var imgHtml = item.image
+      ? '<img class="card-img" src="' + item.image + '" alt="">'
+      : '<div class="card-noimg">🌸</div>';
+    var locHtml = item.location
+      ? '<div class="card-loc">📍 ' + safeText(item.location) + '</div>'
+      : '';
+    var soldPriceHtml = item.status === 'sold'
+      ? '<div class="card-sold-price">Sold: ' + fmt$(item.priceSold) + '</div>'
+      : '';
+    var soldBadge = item.status === 'sold' ? '<div class="sold-badge">✓ SOLD</div>' : '';
+    var bundleBadge = item.isBundle ? '<div class="bundle-badge">📦</div>' : '';
+    card.innerHTML = '<div class="card-stripe"></div>'
+      + imgHtml
+      + '<div class="card-body">'
+      + '<div class="card-name">' + (safeText(item.name) || 'Unnamed Piece') + '</div>'
+      + '<div class="card-paid">Paid: <b>' + fmt$(item.pricePaid) + '</b></div>'
+      + soldPriceHtml
+      + locHtml
+      + '</div>'
+      + soldBadge + bundleBadge;
+    card.addEventListener('click', function() { openDetail(item.id); });
+    grid.appendChild(card);
+  });
+}
+
+// ── DETAIL ──
+function openDetail(id) {
+  var item = items.find(function(i) { return i.id === id; });
+  if (!item) return;
+  curItemId = id;
+  document.getElementById('d-title').textContent = item.name || 'Details';
+  var sold = item.status === 'sold';
+  var profit = sold ? (parseFloat(item.priceSold) - parseFloat(item.pricePaid)) : null;
+  var html = '';
+  if (item.image) {
+    html += '<img src="' + item.image + '" style="width:100%;max-height:240px;object-fit:cover;border-radius:14px;margin-bottom:14px;" alt="">';
+  } else {
+    html += '<div style="width:100%;height:150px;background:linear-gradient(135deg,#F5E8EE,#F0E8E0);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:14px;">🌸</div>';
+  }
+  if (item.receiptImage) {
+    html += '<div style="font-size:10px;color:#7A5C30;letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:6px;">🧾 Receipt / Check</div>';
+    html += '<img src="' + item.receiptImage + '" style="width:100%;max-height:130px;object-fit:cover;border-radius:10px;margin-bottom:14px;border:2px solid #F5ECD8;" alt="">';
+  }
+  html += '<div class="dcard"><div class="dcard-hdr">Purchase Details</div>';
+  html += drow('Item', safeText(item.name) || 'Unnamed Piece');
+  if (item.isBundle && item.bundleDesc) html += drow('Bundle', safeText(item.bundleDesc));
+  html += drow('Paid', fmt$(item.pricePaid));
+  html += drow('How Paid', safeText(item.payMethod) || '--');
+  html += drow('Date Bought', fmtDate(item.datePurchased));
+  html += '<div class="drow"><span class="dlbl">📍 Location</span><div class="loc-btns">';
+  LOCS.forEach(function(loc) {
+    html += '<button class="loc-btn' + (item.location === loc ? ' on' : '') + '" data-loc="' + safeText(loc) + '">' + safeText(loc) + '</button>';
+  });
+  html += '</div></div>';
+  if (item.notes) html += drow('Notes', '<span style="font-weight:400;font-style:italic;color:#9E8E88;">' + safeText(item.notes) + '</span>');
+  html += '</div>';
+  if (sold) {
+    html += '<div class="dcard"><div class="dcard-hdr">Sale Details</div>';
+    html += drow('Sold For', fmt$(item.priceSold), '#5A9E7A');
+    html += drow('Buyer Paid With', safeText(item.soldPayMethod) || '--');
+    html += drow('Date Sold', fmtDate(item.dateSold));
+    html += drow('Profit', (profit >= 0 ? '+' : '') + fmt$(profit), profit >= 0 ? '#5A9E7A' : '#C0392B');
+    html += '</div>';
+  }
+  if (sold) {
+    html += '<div class="success-box">✨ Congratulations on the sale!</div>';
+  } else {
+    html += '<button class="save-btn save-btn-green" id="sell-btn">💰 Mark as Sold</button>';
+  }
+  html += '<button class="del-btn" id="del-btn">🗑 Remove This Item</button>';
+  var dbody = document.getElementById('d-body');
+  dbody.innerHTML = html;
+  // Attach loc btn events
+  dbody.querySelectorAll('.loc-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var loc = btn.dataset.loc;
+      updateLocation(curItemId, loc, btn);
+    });
+  });
+  // Attach sell btn
+  var sellBtn = document.getElementById('sell-btn');
+  if (sellBtn) sellBtn.addEventListener('click', openSellModal);
+  // Attach del btn
+  var delBtn = document.getElementById('del-btn');
+  if (delBtn) delBtn.addEventListener('click', deleteItem);
+  showPage('detail');
+}
+
+function drow(label, val, color) {
+  return '<div class="drow"><span class="dlbl">' + label + '</span><span class="dval"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</span></div>';
+}
+
+function updateLocation(id, loc, btn) {
+  api('items?item_id=eq.' + encodeURIComponent(id), {
+    method: 'PATCH',
+    prefer: 'return=representation',
+    body: JSON.stringify({location: loc})
+  }).then(function() {
+    var item = items.find(function(i) { return i.id === id; });
+    if (item) item.location = loc;
+    document.querySelectorAll('.loc-btn').forEach(function(b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+    showToast('📍 Location updated!');
+  }).catch(function(e) { alert('Could not update: ' + e.message); });
+}
+
+function deleteItem() {
+  if (!confirm('Remove this item from your inventory?')) return;
+  api('items?item_id=eq.' + encodeURIComponent(curItemId), { method: 'DELETE' }).then(function() {
+    items = items.filter(function(i) { return i.id !== curItemId; });
+    showToast('Item removed');
+    showPage('main');
+    renderGrid();
+  }).catch(function(e) { alert('Could not delete: ' + e.message); });
+}
+
+// ── ADD ITEM ──
+function resetAddForm() {
+  imgData = null; rcptData = null; isBundle = false; addLoc = 'Booth'; buyPay = 'Cash';
+  ['a-name','a-paid','a-notes','a-bundle'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('a-date').value = today();
+  document.getElementById('img-box').innerHTML = '<div class="upload-inner"><div class="upload-icon">🌸</div><div class="upload-txt">Tap to photograph your piece</div></div>';
+  document.getElementById('rcpt-box').innerHTML = '<div class="upload-inner"><div class="upload-icon">🧾</div><div class="upload-txt">Tap to photograph receipt or check</div></div>';
+  document.getElementById('bundle-hint').style.display = 'none';
+  document.getElementById('a-bundle').style.display = 'none';
+  document.getElementById('save-item-btn').disabled = false;
+  document.getElementById('save-item-btn').textContent = '🌷 Save This Treasure';
+  makePills('bundle-pills', ['No — single item','Yes — bundle'], function(v) {
+    isBundle = v === 'Yes — bundle';
+    document.getElementById('bundle-hint').style.display = isBundle ? 'block' : 'none';
+    document.getElementById('a-bundle').style.display = isBundle ? 'block' : 'none';
+  }, 'No — single item');
+  makePills('pay-pills', PAY, function(v) { buyPay = v; }, 'Cash');
+  makePills('loc-pills', LOCS, function(v) { addLoc = v; }, 'Booth');
+}
+
+function compressImage(file, cb) {
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 800; var w = img.width; var h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL('image/jpeg', 0.75));
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('fi').addEventListener('change', function() {
+  var file = this.files[0]; if (!file) return;
+  compressImage(file, function(data) {
+    imgData = data;
+    var box = document.getElementById('img-box');
+    box.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = data;
+    img.style.cssText = 'width:100%;max-height:200px;object-fit:cover;display:block;';
+    box.appendChild(img);
+  });
+});
+
+document.getElementById('ri').addEventListener('change', function() {
+  var file = this.files[0]; if (!file) return;
+  compressImage(file, function(data) {
+    rcptData = data;
+    var box = document.getElementById('rcpt-box');
+    box.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = data;
+    img.style.cssText = 'width:100%;max-height:150px;object-fit:cover;display:block;';
+    box.appendChild(img);
+  });
+});
+
+document.getElementById('save-item-btn').addEventListener('click', function() {
+  var paid = document.getElementById('a-paid').value;
+  if (!paid) { alert('Please enter what you paid.'); return; }
+  var btn = document.getElementById('save-item-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  var row = itemToRow({
+    id: Date.now().toString(),
+    name: document.getElementById('a-name').value.trim(),
+    pricePaid: paid,
+    payMethod: buyPay,
+    datePurchased: document.getElementById('a-date').value,
+    notes: document.getElementById('a-notes').value.trim(),
+    image: imgData,
+    receiptImage: rcptData,
+    location: addLoc,
+    isBundle: isBundle,
+    bundleDesc: document.getElementById('a-bundle').value.trim()
+  });
+  api('items', { method: 'POST', prefer: 'return=representation', body: JSON.stringify(row) }).then(function() {
+    showToast('✨ Item saved!');
+    showPage('main');
+    loadItems();
+  }).catch(function(e) {
+    btn.disabled = false; btn.textContent = '🌷 Save This Treasure';
+    alert('Could not save: ' + e.message);
+  });
+});
+
+// ── SELL MODAL ──
+function openSellModal() {
+  var item = items.find(function(i) { return i.id === curItemId; });
+  if (!item) return;
+  document.getElementById('sell-sub').textContent = (item.name || 'This piece') + ' — you paid ' + fmt$(item.pricePaid);
+  document.getElementById('sell-price').value = '';
+  document.getElementById('sell-date').value = today();
+  sellPay = 'Cash';
+  makePills('sell-pay-pills', PAY, function(v) { sellPay = v; }, 'Cash');
+  document.getElementById('sell-overlay').classList.add('on');
+}
+document.getElementById('cancel-sell-btn').addEventListener('click', function() {
+  document.getElementById('sell-overlay').classList.remove('on');
+});
+document.getElementById('sell-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('on');
+});
+document.getElementById('confirm-sell-btn').addEventListener('click', function() {
+  var price = document.getElementById('sell-price').value;
+  if (!price) { alert('Please enter the sold price.'); return; }
+  var btn = document.getElementById('confirm-sell-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  api('items?item_id=eq.' + encodeURIComponent(curItemId), {
+    method: 'PATCH', prefer: 'return=representation',
+    body: JSON.stringify({ status: 'sold', price_sold: parseFloat(price), sold_pay_method: sellPay, date_sold: document.getElementById('sell-date').value })
+  }).then(function() {
+    showToast('💰 Sale recorded!');
+    document.getElementById('sell-overlay').classList.remove('on');
+    btn.disabled = false; btn.textContent = '✦ Confirm Sale';
+    showPage('main'); loadItems();
+  }).catch(function(e) {
+    btn.disabled = false; btn.textContent = '✦ Confirm Sale';
+    alert('Could not save: ' + e.message);
+  });
+});
+
+// ── SHEET ──
+function renderSheet() {
+  var body = document.getElementById('sheet-body');
+  var tP = 0, tS = 0, tSC = 0;
+  body.innerHTML = '';
+  items.forEach(function(item) {
+    var sold = item.status === 'sold';
+    var profit = sold ? (parseFloat(item.priceSold)||0) - (parseFloat(item.pricePaid)||0) : null;
+    tP += parseFloat(item.pricePaid) || 0;
+    if (sold) { tS += parseFloat(item.priceSold)||0; tSC += parseFloat(item.pricePaid)||0; }
+    var tr = document.createElement('tr');
+    var thumb = item.image
+      ? '<img src="' + item.image + '" style="width:26px;height:26px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:6px;" alt="">'
+      : '<span style="display:inline-block;width:26px;height:26px;background:#F5E8EE;border-radius:4px;text-align:center;line-height:26px;margin-right:6px;font-size:11px;">🌸</span>';
+    var nameLink = '<span style="cursor:pointer;display:inline-flex;align-items:center;" data-itemid="' + safeText(item.id) + '">' + thumb + '<span style="color:#8B4A6B;text-decoration:underline;">' + (safeText(item.name) || 'Unnamed') + '</span></span>';
+    tr.innerHTML = '<td>' + nameLink + '</td>'
+      + '<td><span class="loc-pill">' + (safeText(item.location) || '--') + '</span></td>'
+      + '<td>' + fmt$(item.pricePaid) + '</td>'
+      + '<td>' + (safeText(item.payMethod) || '--') + '</td>'
+      + '<td>' + fmtDate(item.datePurchased) + '</td>'
+      + '<td style="color:' + (sold ? '#5A9E7A' : 'inherit') + '">' + (sold ? fmt$(item.priceSold) : '--') + '</td>'
+      + '<td>' + (sold ? (safeText(item.soldPayMethod) || '--') : '--') + '</td>'
+      + '<td>' + fmtDate(item.dateSold) + '</td>'
+      + '<td style="color:' + (profit !== null ? (profit >= 0 ? '#5A9E7A' : '#C0392B') : 'inherit') + '">' + (profit !== null ? (profit >= 0 ? '+' : '') + fmt$(profit) : '--') + '</td>'
+      + '<td><span class="status-pill ' + (sold ? 'sp-sold' : 'sp-sale') + '">' + (sold ? 'Sold' : 'For Sale') + '</span></td>';
+    tr.querySelector('[data-itemid]').addEventListener('click', function() {
+      openDetail(this.dataset.itemid);
+    });
+    body.appendChild(tr);
+  });
+  var tPr = tS - tSC;
+  document.getElementById('sheet-foot').innerHTML = '<td><b>Totals</b></td><td></td><td><b>' + fmt$(tP) + '</b></td><td colspan="2"></td><td style="color:#5A9E7A"><b>' + fmt$(tS) + '</b></td><td colspan="2"></td><td style="color:' + (tPr >= 0 ? '#5A9E7A' : '#C0392B') + '"><b>' + (tPr >= 0 ? '+' : '') + fmt$(tPr) + '</b></td><td></td>';
+}
+
+function dlExcel() {
+  var headers = ['Item','Location','Paid','How Paid','Date Bought','Sold For','Buyer Paid','Date Sold','Profit','Status'];
+  var rows = items.map(function(i) {
+    var sold = i.status === 'sold';
+    var p = sold ? (parseFloat(i.priceSold)||0) - (parseFloat(i.pricePaid)||0) : null;
+    return [i.name||'', i.location||'', fmtN(i.pricePaid), i.payMethod||'', i.datePurchased||'', sold ? fmtN(i.priceSold) : '', sold ? (i.soldPayMethod||'') : '', i.dateSold||'', p !== null ? p.toFixed(2) : '', sold ? 'Sold' : 'For Sale'];
+  });
+  var tP=0,tS=0,tSC=0;
+  items.forEach(function(i) { tP+=parseFloat(i.pricePaid)||0; if(i.status==='sold'){tS+=parseFloat(i.priceSold)||0;tSC+=parseFloat(i.pricePaid)||0;} });
+  rows.push(['TOTALS','',tP.toFixed(2),'','',tS.toFixed(2),'',(tS-tSC).toFixed(2),'','']);
+  var csv = [headers].concat(rows).map(function(r) {
+    return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(',');
+  }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = 'VintageBooth_' + today() + '.csv';
+  a.click();
+  showToast('Downloaded!');
+}
+
+// ── EXPENSES ──
+function loadExpenses() {
+  api('expenses?order=date.desc').then(function(rows) {
+    expenses = rows || [];
+    renderExpenses();
+  }).catch(function(e) { renderExpenses(); });
+}
+
+function renderExpenses() {
+  var now = new Date();
+  var total = expenses.reduce(function(s,e) { return s + (parseFloat(e.amount)||0); }, 0);
+  var month = expenses.filter(function(e) {
+    if (!e.date) return false;
+    var d = new Date(e.date + 'T12:00:00');
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).reduce(function(s,e) { return s + (parseFloat(e.amount)||0); }, 0);
+  document.getElementById('en-total').textContent = '$' + total.toFixed(2);
+  document.getElementById('en-month').textContent = '$' + month.toFixed(2);
+  document.getElementById('en-count').textContent = expenses.length;
+  var list = document.getElementById('exp-list');
+  var empty = document.getElementById('exp-empty');
+  list.innerHTML = '';
+  if (expenses.length === 0) { empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+  expenses.forEach(function(exp) {
+    var card = document.createElement('div');
+    card.className = 'exp-card';
+    var rcptHtml = exp.receipt_image ? '<img src="' + exp.receipt_image + '" style="width:100%;max-height:110px;object-fit:cover;display:block;" alt="">' : '';
+    card.innerHTML = rcptHtml
+      + '<div class="exp-body">'
+      + '<div><div class="exp-name">' + (EICONS[exp.category]||'💼') + ' ' + (safeText(exp.description) || safeText(exp.category)) + '</div>'
+      + '<div class="exp-meta">' + fmtDate(exp.date) + (exp.pay_method ? ' · ' + safeText(exp.pay_method) : '') + (exp.card_last4 ? ' · ****' + safeText(exp.card_last4) : '') + '</div>'
+      + '<span class="exp-cat">' + safeText(exp.category) + '</span></div>'
+      + '<div><div class="exp-amt">$' + Number(exp.amount).toFixed(2) + '</div>'
+      + '<button class="exp-del" data-expid="' + safeText(exp.id) + '">🗑 Remove</button>'
+      + '</div></div>';
+    card.querySelector('.exp-del').addEventListener('click', function() {
+      deleteExpense(this.dataset.expid);
+    });
+    list.appendChild(card);
+  });
+}
+
+function deleteExpense(id) {
+  if (!confirm('Remove this expense?')) return;
+  api('expenses?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }).then(function() {
+    expenses = expenses.filter(function(e) { return e.id !== id; });
+    showToast('Removed');
+    renderExpenses();
+  }).catch(function(e) { alert('Could not delete.'); });
+}
+
+function resetExpForm() {
+  expRcptData = null; expPay = 'Cash'; expCat = 'Gas';
+  ['e-amount','e-desc','e-card'].forEach(function(id) { var el = document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('e-date').value = today();
+  document.getElementById('exp-rcpt-box').innerHTML = '<div class="upload-inner"><div class="upload-icon">🧾</div><div class="upload-txt">Receipt, check, or card statement</div></div>';
+  document.getElementById('eri').value = '';
+  document.getElementById('save-exp-btn').disabled = false;
+  document.getElementById('save-exp-btn').textContent = '💸 Save Expense';
+  makePills('exp-cat-pills', ECATS, function(v) { expCat = v; }, 'Gas');
+  makePills('exp-pay-pills', PAY, function(v) { expPay = v; }, 'Cash');
+}
+
+document.getElementById('eri').addEventListener('change', function() {
+  var file = this.files[0]; if (!file) return;
+  compressImage(file, function(data) {
+    expRcptData = data;
+    var box = document.getElementById('exp-rcpt-box');
+    box.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = data;
+    img.style.cssText = 'width:100%;max-height:140px;object-fit:cover;display:block;';
+    box.appendChild(img);
+  });
+});
+
+document.getElementById('save-exp-btn').addEventListener('click', function() {
+  var amt = document.getElementById('e-amount').value;
+  if (!amt) { alert('Please enter the amount.'); return; }
+  var btn = document.getElementById('save-exp-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  var exp = {
+    id: Date.now().toString(), category: expCat, amount: parseFloat(amt),
+    description: document.getElementById('e-desc').value.trim() || null,
+    pay_method: expPay,
+    card_last4: document.getElementById('e-card').value.trim() || null,
+    date: document.getElementById('e-date').value,
+    receipt_image: expRcptData,
+    date_added: new Date().toISOString()
+  };
+  api('expenses', { method: 'POST', prefer: 'return=representation', body: JSON.stringify(exp) }).then(function() {
+    showToast('Expense saved!');
+    showPage('expenses');
+    loadExpenses();
+  }).catch(function(e) {
+    btn.disabled = false; btn.textContent = '💸 Save Expense';
+    alert('Could not save: ' + e.message);
+  });
+});
+
+// ── NAV BUTTONS ──
+document.getElementById('btn-add').addEventListener('click', function() { resetAddForm(); showPage('add'); });
+document.getElementById('btn-sheet').addEventListener('click', function() { renderSheet(); showPage('sheet'); });
+document.getElementById('btn-exp').addEventListener('click', function() { loadExpenses(); showPage('expenses'); });
+document.getElementById('back-add').addEventListener('click', function() { showPage('main'); });
+document.getElementById('back-detail').addEventListener('click', function() { showPage('main'); });
+document.getElementById('back-sheet').addEventListener('click', function() { showPage('main'); });
+document.getElementById('back-exp').addEventListener('click', function() { showPage('main'); });
+document.getElementById('back-add-exp').addEventListener('click', function() { showPage('expenses'); });
+document.getElementById('btn-add-exp').addEventListener('click', function() { resetExpForm(); showPage('add-exp'); });
+
+// ── FILTERS ──
+document.getElementById('filters').addEventListener('click', function(e) {
+  var btn = e.target.closest('.fb');
+  if (!btn) return;
+  curFilter = btn.dataset.f;
+  document.querySelectorAll('.fb').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  renderGrid();
+});
+
+// ── INIT ──
+loadItems();
+</script>
+</body>
+</html>
